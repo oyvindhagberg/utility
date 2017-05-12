@@ -3,6 +3,18 @@ sudo: false
 go:
   - tip
 before_install:
+  - cd $HOME; pwd
+  - wget -nd https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-154.0.1-linux-x86_64.tar.gz
+  - tar -xzf google-cloud-sdk-154.0.1-linux-x86_64.tar.gz
+  - export PATH=$PATH:$HOME/google-cloud-sdk/bin; echo $PATH
+  - gcloud components install app-engine-go --quiet
+  - chmod 755 $HOME/google-cloud-sdk/platform/google_appengine/go???
+  - export PATH=$PATH:$HOME/google-cloud-sdk/platform/google_appengine; echo $PATH
+install:
   - go get github.com/mattn/goveralls
 script:
-  - $HOME/gopath/bin/goveralls -service=travis-ci
+  - cd $TRAVIS_BUILD_DIR; pwd
+  - go get
+  - go build
+  - goapp test -covermode=count -coverprofile=coverage.out
+  - goveralls -service=travis-ci -coverprofile=coverage.out
