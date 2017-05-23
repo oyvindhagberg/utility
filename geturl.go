@@ -2,9 +2,11 @@ package utility
 
 import (
 	"io/ioutil"
+	"net/http"
 	"time"
 
 	"golang.org/x/net/context"
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
@@ -37,7 +39,14 @@ func Geturl(ctx context.Context, url string, ttl time.Duration) ([]byte, error) 
 	}
 	// No cached version, perform an http request
 	log.Debugf(ctx, "Cache miss: %s", url)
-	client := urlfetch.Client(ctx)
+	//client := urlfetch.Client(ctx)
+	client := &http.Client{
+		Transport: &urlfetch.Transport{
+			Context: ctx,
+			// https://issuetracker.google.com/issues/35900087
+			AllowInvalidServerCertificate: appengine.IsDevAppServer(),
+		},
+	}
 	resp, err := client.Get(url)
 	if err != nil {
 		return []byte{}, err

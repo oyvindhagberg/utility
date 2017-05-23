@@ -35,6 +35,10 @@ func WithSession(h HandlerFuncWithSession) http.HandlerFunc {
 		if appengine.IsDevAppServer() {
 			// For testing purposes, we want cookies to be sent over HTTP too (not just HTTPS):
 			options.AllowHTTP = true
+		} else if r.TLS == nil {
+			log.Errorf(ctx, "Can't use session cookies over http.")
+			http.Error(w, "https is required.", http.StatusForbidden)
+			return
 		}
 		sessmgr := session.NewCookieManagerOptions(ptrNewStoreFunc(ctx), &options)
 		// deferring sessmgr.Close will ensure changes made to the session are
