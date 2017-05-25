@@ -57,17 +57,15 @@ func WithSession(h HandlerFuncWithSession) http.HandlerFunc {
 		// This is a way to avoid a cron job, which would require cron.yaml
 		if time.Since(lastTimeOfGC) > timeBetweenGC {
 			lastTimeOfGC = time.Now()
-			task := taskqueue.NewPOSTTask(gc_path, url.Values{})
+			task := taskqueue.NewPOSTTask(session_gc_path, url.Values{})
 			taskqueue.Add(ctx, task, "") // add t to the default queue
 		}
 	})
 }
 
 func sessionGarbageCollectionWrapper(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	appID := appengine.AppID(ctx)
-	headerAppID := r.Header.Get("X-Appengine-Inbound-Appid")
-	if appID == headerAppID || appengine.IsDevAppServer() {
+	if r.Header.Get("X-Appengine-QueueName") != "" || appengine.IsDevAppServer() {
+		ctx := appengine.NewContext(r)
 		if ptrPurgeExpiredSessFromDSFunc != nil {
 			log.Debugf(ctx, "Session garbage collection")
 			ptrPurgeExpiredSessFromDSFunc(w, r)
@@ -81,15 +79,14 @@ func sessionGarbageCollectionWrapper(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	lastTimeOfGC = time.Now()
-	timeBetweenGC = time.Duration(30) * time.Minute
 	sessionTimeout = time.Duration(30) * time.Minute
-	http.HandleFunc(gc_path, sessionGarbageCollectionWrapper)
+	http.HandleFunc(session_gc_path, sessionGarbageCollectionWrapper)
 }
 
 var ptrPurgeExpiredSessFromDSFunc http.HandlerFunc
 var ptrNewStoreFunc func(ctx context.Context) session.Store
 var lastTimeOfGC time.Time
-var timeBetweenGC time.Duration
 var sessionTimeout time.Duration
 
-const gc_path = "/sessions/gc"
+const session_gc_path = "/sessions/gc"
+const timeBetweenGC time.Duration = time.Duration(30) * time.Minute
