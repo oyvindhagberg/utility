@@ -76,8 +76,7 @@ func TestSessions(t *testing.T) {
 			t.Fatalf("Failed to query datastore: %v", err)
 		}
 		if len(keys) == 0 {
-			t.Fatalf("The datastore is empty, should contain the session.",
-				len(keys))
+			t.Fatal("The datastore is empty, should contain the session.")
 		}
 	}
 

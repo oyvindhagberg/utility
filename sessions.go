@@ -57,7 +57,7 @@ func WithSession(h HandlerFuncWithSession) http.HandlerFunc {
 		// This is a way to avoid a cron job, which would require cron.yaml
 		if time.Since(lastTimeOfGC) > timeBetweenGC {
 			lastTimeOfGC = time.Now()
-			task := taskqueue.NewPOSTTask(session_gc_path, url.Values{})
+			task := taskqueue.NewPOSTTask(sessionGcPath, url.Values{})
 			taskqueue.Add(ctx, task, "") // add t to the default queue
 		}
 	})
@@ -80,7 +80,7 @@ func sessionGarbageCollectionWrapper(w http.ResponseWriter, r *http.Request) {
 func init() {
 	lastTimeOfGC = time.Now()
 	sessionTimeout = time.Duration(30) * time.Minute
-	http.HandleFunc(session_gc_path, sessionGarbageCollectionWrapper)
+	http.HandleFunc(sessionGcPath, sessionGarbageCollectionWrapper)
 }
 
 var ptrPurgeExpiredSessFromDSFunc http.HandlerFunc
@@ -88,5 +88,5 @@ var ptrNewStoreFunc func(ctx context.Context) session.Store
 var lastTimeOfGC time.Time
 var sessionTimeout time.Duration
 
-const session_gc_path = "/sessions/gc"
+const sessionGcPath = "/sessions/gc"
 const timeBetweenGC time.Duration = time.Duration(30) * time.Minute
